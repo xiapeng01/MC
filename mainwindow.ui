@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>719</width>
+    <height>236</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>IP地址</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="IPLineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>端口号</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="portLineEdit"/>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="wordModeCheckBox">
+          <property name="text">
+           <string>字方式</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnConnect">
+          <property name="text">
+           <string>连接</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnClose">
+          <property name="text">
+           <string>断开</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>寄存器</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="addressLineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>数量</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="countLineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="resultLabel">
+          <property name="text">
+           <string>出错代码</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="resultLineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>值</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="valueLineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>发送帧</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="sendLineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>返回帧</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="recvLineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QPushButton" name="readBtn">
+          <property name="text">
+           <string>读取</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="writeBtn">
+          <property name="text">
+           <string>写入</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>719</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>菜单</string>
+    </property>
+    <addaction name="actionStart"/>
+    <addaction name="actionStop"/>
+    <addaction name="actionReadSlot"/>
+    <addaction name="actionWriteSlot"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>读取</string>
+    </property>
+    <addaction name="readBool"/>
+    <addaction name="readByte"/>
+    <addaction name="readShort"/>
+    <addaction name="readUShort"/>
+    <addaction name="intRead"/>
+    <addaction name="uintRead"/>
+    <addaction name="readLong"/>
+    <addaction name="readULong"/>
+    <addaction name="readFloat"/>
+    <addaction name="readDouble"/>
+    <addaction name="readString"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>写入</string>
+    </property>
+    <addaction name="writeBool"/>
+    <addaction name="writeByte"/>
+    <addaction name="writeShort"/>
+    <addaction name="ushortWrite"/>
+    <addaction name="intWrite"/>
+    <addaction name="uintWrite"/>
+    <addaction name="writeLong"/>
+    <addaction name="writeULong"/>
+    <addaction name="writeFloat"/>
+    <addaction name="writeDouble"/>
+    <addaction name="writeString"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+  </widget>
+  <action name="actionStart">
+   <property name="text">
+    <string>启动</string>
+   </property>
+   <property name="toolTip">
+    <string>启动线程</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>停止</string>
+   </property>
+   <property name="toolTip">
+    <string>停止线程</string>
+   </property>
+  </action>
+  <action name="actionReadSlot">
+   <property name="text">
+    <string>槽读取</string>
+   </property>
+   <property name="toolTip">
+    <string>读取</string>
+   </property>
+  </action>
+  <action name="actionWriteSlot">
+   <property name="text">
+    <string>槽写入</string>
+   </property>
+   <property name="toolTip">
+    <string>写入</string>
+   </property>
+  </action>
+  <action name="readBool">
+   <property name="text">
+    <string>bool读取</string>
+   </property>
+   <property name="toolTip">
+    <string>bool读取</string>
+   </property>
+  </action>
+  <action name="readByte">
+   <property name="text">
+    <string>byte读取</string>
+   </property>
+   <property name="toolTip">
+    <string>byte读取</string>
+   </property>
+  </action>
+  <action name="readShort">
+   <property name="text">
+    <string>short读取</string>
+   </property>
+   <property name="toolTip">
+    <string>short读取</string>
+   </property>
+  </action>
+  <action name="writeBool">
+   <property name="text">
+    <string>bool写入</string>
+   </property>
+   <property name="toolTip">
+    <string>bool写入</string>
+   </property>
+  </action>
+  <action name="writeByte">
+   <property name="text">
+    <string>byte写入</string>
+   </property>
+   <property name="toolTip">
+    <string>byte写入</string>
+   </property>
+  </action>
+  <action name="writeShort">
+   <property name="text">
+    <string>short写入</string>
+   </property>
+   <property name="toolTip">
+    <string>short写入</string>
+   </property>
+  </action>
+  <action name="readUShort">
+   <property name="text">
+    <string>ushort读取</string>
+   </property>
+  </action>
+  <action name="intRead">
+   <property name="text">
+    <string>int读取</string>
+   </property>
+  </action>
+  <action name="uintRead">
+   <property name="text">
+    <string>uint读取</string>
+   </property>
+  </action>
+  <action name="ushortWrite">
+   <property name="text">
+    <string>ushort写入</string>
+   </property>
+  </action>
+  <action name="intWrite">
+   <property name="text">
+    <string>int写入</string>
+   </property>
+  </action>
+  <action name="uintWrite">
+   <property name="text">
+    <string>uint写入</string>
+   </property>
+  </action>
+  <action name="readLong">
+   <property name="text">
+    <string>long读取</string>
+   </property>
+  </action>
+  <action name="readULong">
+   <property name="text">
+    <string>ULong读取</string>
+   </property>
+  </action>
+  <action name="readFloat">
+   <property name="text">
+    <string>Float读取</string>
+   </property>
+  </action>
+  <action name="readDouble">
+   <property name="text">
+    <string>Double读取</string>
+   </property>
+  </action>
+  <action name="readString">
+   <property name="text">
+    <string>String读取</string>
+   </property>
+  </action>
+  <action name="writeLong">
+   <property name="text">
+    <string>Long写入</string>
+   </property>
+  </action>
+  <action name="writeULong">
+   <property name="text">
+    <string>ULong写入</string>
+   </property>
+  </action>
+  <action name="writeFloat">
+   <property name="text">
+    <string>Float写入</string>
+   </property>
+  </action>
+  <action name="writeDouble">
+   <property name="text">
+    <string>Double写入</string>
+   </property>
+  </action>
+  <action name="writeString">
+   <property name="text">
+    <string>String写入</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
