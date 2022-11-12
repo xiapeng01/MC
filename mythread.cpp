@@ -28,12 +28,12 @@ void MyThread::run()
     {
         this->msleep(3);
         //MC_3E->writeInt(adr2,2);
-        value=MC_3E->readUShort(address);
+        value=MC_3E->readUShort(address).content;
         if(value==1)
             MC_3E->writeUShort(adr2,2);
         else if(value==0)
             MC_3E->writeUShort(adr2,3);
-        if(value==0 && MC_3E->readUShort("D102")==1) MC_3E->writeShort("D103",56);
+        if(value==0 && MC_3E->readUShort("D102").content==1) MC_3E->writeShort("D103",56);
     }
     stopped=false;
 }

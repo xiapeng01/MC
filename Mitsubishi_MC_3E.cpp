@@ -444,11 +444,11 @@ QString Mitsubishi_MC_3E_bin::filterChar(QString str)
 
 //以下为按元类型读写数据的实现
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////位-bool
-bool Mitsubishi_MC_3E_bin::readBool(QString address)
+operateResult<bool> Mitsubishi_MC_3E_bin::readBool(QString address)
 {
-    bool ret;
+    operateResult<bool> ret;
     QString temp=readData(address,1,false);
-    ret=temp.left(1)=="1"?1:0;
+    ret.content=temp.left(1)=="1"?1:0;
     return ret;
 }
 
@@ -462,11 +462,11 @@ bool Mitsubishi_MC_3E_bin::writeBool(QString address,bool value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////字节-byte
-unsigned char Mitsubishi_MC_3E_bin::readByte(QString address)
+operateResult<unsigned char> Mitsubishi_MC_3E_bin::readByte(QString address)
 {
-    unsigned char ret;
+    operateResult<unsigned char> ret;
     QString temp=readData(address,1,false);
-    ret=temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16);
+    ret.content=temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16);
     return ret;
 }
 
@@ -478,13 +478,13 @@ bool Mitsubishi_MC_3E_bin::writeByte(QString address,unsigned char value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////短整型-short
-short Mitsubishi_MC_3E_bin::readShort(QString address)
+operateResult<short> Mitsubishi_MC_3E_bin::readShort(QString address)
 {
-    short ret;
+    operateResult<short> ret;
     unsigned length=1;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    return ret;
 }
 
 bool Mitsubishi_MC_3E_bin::writeShort(QString address,short value)
@@ -496,13 +496,13 @@ bool Mitsubishi_MC_3E_bin::writeShort(QString address,short value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号短整型-ushort
-unsigned short Mitsubishi_MC_3E_bin::readUShort(QString address)
+operateResult<unsigned short> Mitsubishi_MC_3E_bin::readUShort(QString address)
 {
-    unsigned short ret;
+    operateResult<unsigned short> ret;
     unsigned length=1;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    return (ret);
 }
 
 bool Mitsubishi_MC_3E_bin::writeUShort(QString address,unsigned short value)
@@ -514,13 +514,13 @@ bool Mitsubishi_MC_3E_bin::writeUShort(QString address,unsigned short value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////整型-int
-int Mitsubishi_MC_3E_bin::readInt(QString address)
+operateResult<int> Mitsubishi_MC_3E_bin::readInt(QString address)
 {
-    int ret;
+   operateResult<int> ret;
     unsigned length=sizeof(ret)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));//toint不能直接处理负数
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));//toint不能直接处理负数
+    return (ret);
 }
 
 bool Mitsubishi_MC_3E_bin::writeInt(QString address,int value)
@@ -532,13 +532,13 @@ bool Mitsubishi_MC_3E_bin::writeInt(QString address,int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号整型-uint
-unsigned int Mitsubishi_MC_3E_bin::readUInt(QString address)
+operateResult<unsigned int> Mitsubishi_MC_3E_bin::readUInt(QString address)
 {
-    unsigned int ret;
+    operateResult<unsigned int> ret;
     unsigned length=sizeof(ret)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    return (ret);
 }
 
 bool Mitsubishi_MC_3E_bin::writeUInt(QString address,unsigned int value)
@@ -550,13 +550,13 @@ bool Mitsubishi_MC_3E_bin::writeUInt(QString address,unsigned int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////长整型-long-64bit
-long int Mitsubishi_MC_3E_bin::readLongInt(QString address)
+operateResult<long int> Mitsubishi_MC_3E_bin::readLongInt(QString address)
 {
-    long int ret;
+    operateResult<long int> ret;
     unsigned int length=sizeof(ret)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
+    return (ret);
 }
 
 bool Mitsubishi_MC_3E_bin::writeLongInt(QString address,long int value)
@@ -568,13 +568,13 @@ bool Mitsubishi_MC_3E_bin::writeLongInt(QString address,long int value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号长整型-ulong-64bit
-unsigned long int Mitsubishi_MC_3E_bin::readULongInt(QString address)
+operateResult<unsigned long int> Mitsubishi_MC_3E_bin::readULongInt(QString address)
 {
-    unsigned long int ret;
+    operateResult<unsigned long int> ret;
     unsigned int length=sizeof(ret)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    ret=(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
-    return qFromBigEndian(ret);
+    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
+    return (ret);
 }
 
 bool Mitsubishi_MC_3E_bin::writeULongInt(QString address,unsigned long int value)
@@ -586,14 +586,16 @@ bool Mitsubishi_MC_3E_bin::writeULongInt(QString address,unsigned long int value
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////单精度浮点型-float-32bit--转成无符号32位整型
-float Mitsubishi_MC_3E_bin::readFloat(QString address)
+operateResult<float> Mitsubishi_MC_3E_bin::readFloat(QString address)
 {
-    float ret;
-    unsigned int length=sizeof(ret)/sizeof(char)/2;
+   operateResult<float> ret;
+    float r;
+    unsigned int length=sizeof(r)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    unsigned int i=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
-    std::memcpy(&ret,&i,sizeof(ret)/sizeof(char));
-    return (ret);
+    unsigned int i=qFromBigEndian(temp.left(sizeof(r)/sizeof(char)*2).toUInt(nullptr,16));
+    std::memcpy(&r,&i,sizeof(r)/sizeof(char));
+    ret.content=r;
+    return ret;
 }
 
 bool Mitsubishi_MC_3E_bin::writeFloat(QString address,float value)
@@ -607,15 +609,17 @@ bool Mitsubishi_MC_3E_bin::writeFloat(QString address,float value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////双精度浮点型-double float-32bit--转成无符号64位整型
-double Mitsubishi_MC_3E_bin::readDouble(QString address)
+operateResult<double> Mitsubishi_MC_3E_bin::readDouble(QString address)
 {
-    double ret;
-    unsigned int length=sizeof(ret)/sizeof(char)/2;
+    operateResult<double> ret;
+    double r;
+    unsigned int length=sizeof(r)/sizeof(char)/2;
     QString temp=readData(address,length,false);
-    unsigned long long int l=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toULongLong(nullptr,16));
+    unsigned long long int l=qFromBigEndian(temp.left(sizeof(r)/sizeof(char)*2).toULongLong(nullptr,16));
 
-    std::memcpy(&ret,&l,sizeof(ret)/sizeof(char));
-    return (ret);
+    std::memcpy(&r,&l,sizeof(r)/sizeof(char));
+    ret.content=r;
+    return ret;
 }
 
 bool Mitsubishi_MC_3E_bin::writeDouble(QString address,double value)
@@ -629,12 +633,12 @@ bool Mitsubishi_MC_3E_bin::writeDouble(QString address,double value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////ASCII字符串
-QString Mitsubishi_MC_3E_bin::readString(QString address,unsigned int count)
+operateResult<QString> Mitsubishi_MC_3E_bin::readString(QString address,unsigned int count)
 {
-    QString ret;
+    operateResult<QString> ret;
     unsigned int length=count%2==0?count/2:count/2+1;
     QString temp=readData(address,length,false);//十六进制字面值
-    ret=QByteArray::fromHex(temp.toLatin1());
+    ret.content=QByteArray::fromHex(temp.toLatin1());
     return ret;
 }
 

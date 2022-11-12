@@ -161,7 +161,7 @@ void MainWindow::on_readBool_triggered()
 {
     bool ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readBool(address);
+    ret=MC_3Einstance->readBool(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -169,7 +169,7 @@ void MainWindow::on_readByte_triggered()
 {
     unsigned char ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readByte(address);
+    ret=MC_3Einstance->readByte(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -177,7 +177,7 @@ void MainWindow::on_readShort_triggered()
 {
     short ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readShort(address);
+    ret=MC_3Einstance->readShort(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -185,7 +185,7 @@ void MainWindow::on_readUShort_triggered()
 {
     unsigned short ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readUShort(address);
+    ret=MC_3Einstance->readUShort(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -193,7 +193,7 @@ void MainWindow::on_intRead_triggered()
 {
     int ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readInt(address);
+    ret=MC_3Einstance->readInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -201,7 +201,7 @@ void MainWindow::on_uintRead_triggered()
 {
     unsigned int ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readUInt(address);
+    ret=MC_3Einstance->readUInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -209,7 +209,7 @@ void MainWindow::on_readLong_triggered()
 {
     long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readLongInt(address);
+    ret=MC_3Einstance->readLongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -218,7 +218,7 @@ void MainWindow::on_readULong_triggered()
 {
     unsigned long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readULongInt(address);
+    ret=MC_3Einstance->readULongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -227,7 +227,7 @@ void MainWindow::on_readFloat_triggered()
 {
     float ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readFloat(address);
+    ret=MC_3Einstance->readFloat(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -236,7 +236,7 @@ void MainWindow::on_readDouble_triggered()
 {
     double ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readDouble(address);
+    ret=MC_3Einstance->readDouble(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -245,7 +245,7 @@ void MainWindow::on_readString_triggered()
     QString ret;
     QString address=ui->addressLineEdit->text();
     int count=ui->countLineEdit->text().toUInt();
-    ret=MC_3Einstance->readString(address,count);
+    ret=MC_3Einstance->readString(address,count).content;
     ui->valueLineEdit->setText(ret);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////write

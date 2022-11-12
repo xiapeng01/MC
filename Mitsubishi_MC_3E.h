@@ -20,6 +20,16 @@ static QRegularExpression expFDec("[^\\-?\\+?\\.?0-9]");
 static QRegularExpression expHex("[^0-9a-fA-F]");
 static QRegularExpression expChar("[^a-zA-Z]");
 
+
+template <typename T>
+struct operateResult
+{
+public:
+    T content;
+    bool isComlite;
+};
+
+
 class Mitsubishi_MC_3E_bin:public comm
 {
     Q_OBJECT
@@ -81,6 +91,19 @@ private slots:
         void writeSlot(QString,unsigned int,bool,QString);//返回结果
 
 public:
+        operateResult<bool> readBool(QString address);
+        operateResult<unsigned char> readByte(QString address);
+        operateResult<short> readShort(QString address);
+        operateResult<unsigned short> readUShort(QString address);
+        operateResult<int> readInt(QString address);
+        operateResult<unsigned int> readUInt(QString address);
+        operateResult<long int> readLongInt(QString address);
+        operateResult<unsigned long int> readULongInt(QString address);
+        operateResult<float> readFloat(QString address);
+        operateResult<double> readDouble(QString address);
+        operateResult<QString> readString(QString address,unsigned int length);
+
+/*
         bool readBool(QString address);
         unsigned char readByte(QString address);
         short readShort(QString address);
@@ -92,6 +115,7 @@ public:
         float readFloat(QString address);
         double readDouble(QString address);
         QString readString(QString address,unsigned int length);
+*/
 
         bool writeBool(QString address,bool value);
         bool writeByte(QString address,unsigned char value);
