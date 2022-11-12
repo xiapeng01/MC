@@ -1,4 +1,4 @@
-#include "MyThread.h"
+#include "mythread.h"
 #include <QMetaObject>
 #include <QDebug>
 
@@ -19,11 +19,9 @@ void MyThread::run()
     unsigned short value;
     QString adr2="D101";
 
-
     qDebug()<<"MyThread通信实例线程ID:"<<QThread::currentThreadId();
     this->msleep(1000);
-    qreal i=0;
-    bool flag;
+
     while(!stopped)
     {
         this->msleep(3);

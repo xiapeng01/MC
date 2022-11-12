@@ -151,26 +151,38 @@ QString Mitsubishi_MC_3E_bin::enCodeMitsubishi_MC_3E(int method,QString address,
 }
 
 //解析MC-3E帧
-QString Mitsubishi_MC_3E_bin::deCodeMitsubishi_MC_3E(QString str)//只负责把返回帧的有效值分解出来
+retData Mitsubishi_MC_3E_bin::deCodeMitsubishi_MC_3E(QString str)//只负责把返回帧的有效值分解出来
 {
-    if(str.left(12)=="D00000FFFF03" && str.length()>18)
+    retData ret;
+    recvErrorCode.clear();
+    if(str.left(12)=="D00000FFFF03")
     {
-        recvErrorCode=str.mid(20,2)+str.mid(18,2);
-        QString ret=str.mid(22,str.length());
+        if(str.length()>22) //正常情况，返回帧的长度大于21个ASCII字符
+        {
+            recvErrorCode=str.mid(20,2)+str.mid(18,2);//错误码交换高低字节
+            ret.ErrCode=qFromBigEndian(recvErrorCode.toShort(nullptr,16));
+            ret.value=str.mid(22,str.length());//错误码以后的都原样给出
+        }else//强制替换为错误值,即使出错也给出两个成员
+        {
+            ret.ErrCode=-1;
+            ret.value=0;
+        }
         return ret;
     }else
     {
         qDebug()<<"Split String Error.";
-        return NULL;
+        ret.ErrCode=-1;
+        ret.value=0;
+        return ret;
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Q_INVOKABLE QString Mitsubishi_MC_3E_bin::readData(QString address,unsigned int length,bool wordMode)
+Q_INVOKABLE retData Mitsubishi_MC_3E_bin::readData(QString address,unsigned int length,bool wordMode)
 {
     qDebug()<<QTime::currentTime().toString("hh:mm:ss.zzz")<<":MC_readData实例线程ID:"<<QThread::currentThreadId();
     int delay=0;
-    QString ret=NULL;
+    retData ret;
     if(network->isOpen())
     {
         //while(busy) QCoreApplication::processEvents();
@@ -182,25 +194,37 @@ Q_INVOKABLE QString Mitsubishi_MC_3E_bin::readData(QString address,unsigned int 
         recvErrorCode.clear();
         sendStr=enCodeMitsubishi_MC_3E(0,address,length,wordMode,"");
         send(sendStr);
-        while(!recvFinished())
+        while(!recvFinished())//等待接收完成
         {
             sleep(1);
             delay++;
             //qDebug()<<delay;            
-            if(delay>1000) break;
+            if(delay>1000)
+            {
+                ret.ErrCode=-2;
+                ret.value="0000";
+                throw("Recv data time out.");
+                return ret;
+            };
         }
-        recvStr=readRecvBufferString();
-        recvData=deCodeMitsubishi_MC_3E(recvStr);
-        ret=recvData;
+        recvStr=readRecvBufferString();        
+        ret=deCodeMitsubishi_MC_3E(recvStr);
+        recvData=ret.value;
         funMut.unlock();
+    }else
+    {
+        ret.ErrCode=-3;
+        ret.value="0000";
+        throw("Network is close!");
+        return ret;
     }
     return ret;
 }
 
-Q_INVOKABLE QString Mitsubishi_MC_3E_bin::writeData(QString address,unsigned int length,bool wordMode,QString value)
+Q_INVOKABLE retData Mitsubishi_MC_3E_bin::writeData(QString address,unsigned int length,bool wordMode,QString value)
 {
     qDebug()<<QTime::currentTime().toString("hh:mm:ss.zzz")<<":MC_writeData实例线程ID:"<<QThread::currentThreadId();
-    QString ret=NULL;
+    retData ret;
     if(network->isOpen())
     {
         //while(busy) QCoreApplication::processEvents();
@@ -213,25 +237,37 @@ Q_INVOKABLE QString Mitsubishi_MC_3E_bin::writeData(QString address,unsigned int
         recvErrorCode.clear();
         sendStr=enCodeMitsubishi_MC_3E(1,address,length,wordMode,value);
         send(sendStr);
-        while(!recvFinished())
+        while(!recvFinished())//等待接收完成
         {
             sleep(1);
             delay++;
             //qDebug()<<delay;            
-            if(delay>1000) break;
+            if(delay>1000)
+            {
+                ret.ErrCode=-2;
+                ret.value="0000";
+                throw("Recv data time out.");
+                return ret;
+            }
         }
         recvStr=readRecvBufferString();
-        recvData=deCodeMitsubishi_MC_3E(recvStr);
-        ret=recvData;
+        ret=deCodeMitsubishi_MC_3E(recvStr);
+        recvData=ret.value;
         funMut.unlock();
+    }else
+    {
+        ret.ErrCode=-2;
+        ret.value="0000";
+        throw("Network is close!");
+        return ret;
     }
     return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-QString Mitsubishi_MC_3E_bin::read(QString address,unsigned int length,bool wordMode)
+retData Mitsubishi_MC_3E_bin::read(QString address,unsigned int length,bool wordMode)
 {
-    QString ret=NULL;
+    retData ret;
     if(network->isOpen())
     {
         //while(busy)
@@ -239,13 +275,14 @@ QString Mitsubishi_MC_3E_bin::read(QString address,unsigned int length,bool word
             //qDebug()<<"read wait for comunication.";
             //QCoreApplication::processEvents();
         //}
-        ret=process(readData(address,length,wordMode),registerMode(address,wordMode));
+        ret=readData(address,length,wordMode);
+        ret.value=process(ret.value,registerMode(address,wordMode));//分割处理并小端
     }
     return ret;
 }
-QString Mitsubishi_MC_3E_bin::write(QString address,unsigned int length,bool wordMode,QString value)
+retData Mitsubishi_MC_3E_bin::write(QString address,unsigned int length,bool wordMode,QString value)
 {
-    QString ret=NULL;
+    retData ret;
     if(network->isOpen())
     {
         //while(busy)
@@ -253,35 +290,38 @@ QString Mitsubishi_MC_3E_bin::write(QString address,unsigned int length,bool wor
             //qDebug()<<"write wait for comunication.";
             //QCoreApplication::processEvents();
         //}
-        ret=process(writeData(address,length,wordMode,splitString(value)),registerMode(address,wordMode));
+        ret=writeData(address,length,wordMode,splitString(value));
+        ret.value=process(ret.value,registerMode(address,wordMode));//分割处理并转换为小端
     }
     return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Q_INVOKABLE QString Mitsubishi_MC_3E_bin::readInvoke(QString address,unsigned int length,bool wordMode)
+Q_INVOKABLE retData Mitsubishi_MC_3E_bin::readInvoke(QString address,unsigned int length,bool wordMode)
 {
-    QString ret=NULL;
+    retData ret;
     QMetaObject::invokeMethod(this,"read",
-                              Q_RETURN_ARG(QString,ret),
+                              Q_RETURN_ARG(retData,ret),
                               Q_ARG(QString,address),
                               Q_ARG(unsigned int,length),
                               Q_ARG(bool,wordMode)
                               );
-    return process(ret,registerMode(address,wordMode));
+    ret.value=process(ret.value,registerMode(address,wordMode));
+    return ret;
 }
 
-Q_INVOKABLE QString Mitsubishi_MC_3E_bin::writeInvoke(QString address,unsigned int length,bool wordMode,QString value)
+Q_INVOKABLE retData Mitsubishi_MC_3E_bin::writeInvoke(QString address,unsigned int length,bool wordMode,QString value)
 {
-    QString ret=NULL;
+    retData ret;
     QMetaObject::invokeMethod(this,"write",
-                              Q_RETURN_ARG(QString,ret),
+                              Q_RETURN_ARG(retData,ret),
                               Q_ARG(QString,address),
                               Q_ARG(unsigned int,length),
                               Q_ARG(bool,wordMode),
                               Q_ARG(QString,value)
                               );
-    return process(ret,registerMode(address,wordMode));
+    ret.value=process(ret.value,registerMode(address,wordMode));
+    return ret;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Mitsubishi_MC_3E_bin::readSlot(QString address,unsigned int length,bool wordMode)
@@ -447,34 +487,41 @@ QString Mitsubishi_MC_3E_bin::filterChar(QString str)
 operateResult<bool> Mitsubishi_MC_3E_bin::readBool(QString address)
 {
     operateResult<bool> ret;
-    QString temp=readData(address,1,false);
+    retData r=readData(address,1,false);
+    QString temp=r.value;
+    ret.isSuccess=r.ErrCode==0;
     ret.content=temp.left(1)=="1"?1:0;
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeBool(QString address,bool value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeBool(QString address,bool value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     QString v=QString::number(value);
     if(v.length()%2!=0) v.append("0");
-    ret=writeData(address,1,false,v);
-    return (ret=="0000");
+    ErrCode=writeData(address,1,false,v).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////字节-byte
 operateResult<unsigned char> Mitsubishi_MC_3E_bin::readByte(QString address)
 {
     operateResult<unsigned char> ret;
-    QString temp=readData(address,1,false);
-    ret.content=temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16);
+    retData temp=readData(address,1,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=temp.value.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16);
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeByte(QString address,unsigned char value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeByte(QString address,unsigned char value)
 {
-    QString ret=NULL;
-    ret=writeData(address,1,false,QString::number(value,16));
-    return (ret=="0000");
+    operateResult<bool>ret;
+    short ErrCode;
+    ErrCode=writeData(address,1,false,QString::number(value,16)).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////短整型-short
@@ -482,17 +529,20 @@ operateResult<short> Mitsubishi_MC_3E_bin::readShort(QString address)
 {
     operateResult<short> ret;
     unsigned length=1;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeShort(QString address,short value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeShort(QString address,short value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=1;
-    ret=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号短整型-ushort
@@ -500,17 +550,20 @@ operateResult<unsigned short> Mitsubishi_MC_3E_bin::readUShort(QString address)
 {
     operateResult<unsigned short> ret;
     unsigned length=1;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
     return (ret);
 }
 
-bool Mitsubishi_MC_3E_bin::writeUShort(QString address,unsigned short value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeUShort(QString address,unsigned short value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=1;
-    ret=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////整型-int
@@ -518,17 +571,20 @@ operateResult<int> Mitsubishi_MC_3E_bin::readInt(QString address)
 {
    operateResult<int> ret;
     unsigned length=sizeof(ret)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));//toint不能直接处理负数
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));//toint不能直接处理负数
     return (ret);
 }
 
-bool Mitsubishi_MC_3E_bin::writeInt(QString address,int value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeInt(QString address,int value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=sizeof(value)/sizeof(char)/2;
-    ret=writeData(address,length,false,QString::number(qToBigEndian((unsigned int)value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian((unsigned int)value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号整型-uint
@@ -536,17 +592,20 @@ operateResult<unsigned int> Mitsubishi_MC_3E_bin::readUInt(QString address)
 {
     operateResult<unsigned int> ret;
     unsigned length=sizeof(ret)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toUInt(nullptr,16));
     return (ret);
 }
 
-bool Mitsubishi_MC_3E_bin::writeUInt(QString address,unsigned int value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeUInt(QString address,unsigned int value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=sizeof(value)/sizeof(char)/2;
-    ret=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////长整型-long-64bit
@@ -554,17 +613,20 @@ operateResult<long int> Mitsubishi_MC_3E_bin::readLongInt(QString address)
 {
     operateResult<long int> ret;
     unsigned int length=sizeof(ret)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
     return (ret);
 }
 
-bool Mitsubishi_MC_3E_bin::writeLongInt(QString address,long int value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeLongInt(QString address,long int value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     long int length=sizeof(value)/sizeof(char)/2;
-    ret=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////无符号长整型-ulong-64bit
@@ -572,17 +634,20 @@ operateResult<unsigned long int> Mitsubishi_MC_3E_bin::readULongInt(QString addr
 {
     operateResult<unsigned long int> ret;
     unsigned int length=sizeof(ret)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    ret.content=qFromBigEndian(temp.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
+    retData temp=readData(address,length,false);
+    ret.isSuccess=temp.ErrCode==0;
+    ret.content=qFromBigEndian(temp.value.left(sizeof(ret)/sizeof(char)*2).toULong(nullptr,16));
     return (ret);
 }
 
-bool Mitsubishi_MC_3E_bin::writeULongInt(QString address,unsigned long int value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeULongInt(QString address,unsigned long int value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=sizeof(value)/sizeof(char)/2;
-    ret=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(value),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////单精度浮点型-float-32bit--转成无符号32位整型
@@ -591,21 +656,24 @@ operateResult<float> Mitsubishi_MC_3E_bin::readFloat(QString address)
    operateResult<float> ret;
     float r;
     unsigned int length=sizeof(r)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    unsigned int i=qFromBigEndian(temp.left(sizeof(r)/sizeof(char)*2).toUInt(nullptr,16));
+    retData temp=readData(address,length,false);
+    unsigned int i=qFromBigEndian(temp.value.left(sizeof(r)/sizeof(char)*2).toUInt(nullptr,16));
     std::memcpy(&r,&i,sizeof(r)/sizeof(char));
+    ret.isSuccess=temp.ErrCode==0;
     ret.content=r;
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeFloat(QString address,float value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeFloat(QString address,float value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=sizeof(value)/sizeof(char)/2;
     unsigned int i;
     std::memcpy(&i,&value,sizeof(value)/sizeof(char));
-    ret=writeData(address,length,false,QString::number(qToBigEndian(i),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(i),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////双精度浮点型-double float-32bit--转成无符号64位整型
@@ -614,22 +682,24 @@ operateResult<double> Mitsubishi_MC_3E_bin::readDouble(QString address)
     operateResult<double> ret;
     double r;
     unsigned int length=sizeof(r)/sizeof(char)/2;
-    QString temp=readData(address,length,false);
-    unsigned long long int l=qFromBigEndian(temp.left(sizeof(r)/sizeof(char)*2).toULongLong(nullptr,16));
+    retData temp=readData(address,length,false);
+    unsigned long long int l=qFromBigEndian(temp.value.left(sizeof(r)/sizeof(char)*2).toULongLong(nullptr,16));
 
     std::memcpy(&r,&l,sizeof(r)/sizeof(char));
     ret.content=r;
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeDouble(QString address,double value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeDouble(QString address,double value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     unsigned int length=sizeof(value)/sizeof(char)/2;
     unsigned long long int l;
     std::memcpy(&l,&value,sizeof(value)/sizeof(char));
-    ret=writeData(address,length,false,QString::number(qToBigEndian(l),16).rightJustified(sizeof(value)/sizeof(char)*2,'0'));
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,QString::number(qToBigEndian(l),16).rightJustified(sizeof(value)/sizeof(char)*2,'0')).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////ASCII字符串
@@ -637,17 +707,19 @@ operateResult<QString> Mitsubishi_MC_3E_bin::readString(QString address,unsigned
 {
     operateResult<QString> ret;
     unsigned int length=count%2==0?count/2:count/2+1;
-    QString temp=readData(address,length,false);//十六进制字面值
-    ret.content=QByteArray::fromHex(temp.toLatin1());
+    retData temp=readData(address,length,false);//十六进制字面值
+    ret.content=QByteArray::fromHex(temp.value.toLatin1());
     return ret;
 }
 
-bool Mitsubishi_MC_3E_bin::writeString(QString address,QString value)
+operateResult<bool> Mitsubishi_MC_3E_bin::writeString(QString address,QString value)
 {
-    QString ret=NULL;
+    operateResult<bool>ret;
+    short ErrCode;
     QByteArray ary=QByteArray::fromStdString(value.toStdString());
     QString str=ary.toHex();
     unsigned int length=str.length()/4;
-    ret=writeData(address,length,false,str);
-    return (ret=="0000");
+    ErrCode=writeData(address,length,false,str).ErrCode;
+    ret.isSuccess=(ErrCode==0);
+    return ret;
 }

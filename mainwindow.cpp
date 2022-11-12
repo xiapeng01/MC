@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     myT1=new MyThread();
     myT2=new MyThread();
 
-    for(int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
+    for(unsigned int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
 
 
     connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
@@ -68,7 +68,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_readBtn_clicked()
 {
-    QString ret=MC_3Einstance->read(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked());
+    QString ret=MC_3Einstance->read(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked()).value;
     ui->sendLineEdit->setText(format(MC_3Einstance->readSendString()));
     ui->recvLineEdit->setText(format(MC_3Einstance->readRecvString()));
     ui->resultLineEdit->setText(MC_3Einstance->readErrorCode());

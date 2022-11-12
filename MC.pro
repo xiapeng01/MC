@@ -28,6 +28,8 @@ QT += network
 
 QT += concurrent
 
+QT += serialport
+
 #QT += concurrent testlib
 
 # Default rules for deployment.
