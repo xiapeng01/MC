@@ -1,96 +1,95 @@
-#include <comm.h>
+#include <ENet.h>
 
-comm::comm(QObject *parent)
+ENet::ENet(QObject *parent)
     :QObject{parent}
 {    
     create();
 }
 
-comm::comm(QString hostName,int port)
+ENet::ENet(QString hostName,int port)
 {
     create();
     open(hostName,port,1000);
 }
 
-comm::comm(QString hostName,int port,int timeOut)
+ENet::ENet(QString hostName,int port,int timeOut)
 {
     create();
     open(hostName,port,timeOut);
 }
 
-comm::~comm()
+ENet::~ENet()
 {
-    network->flush();
-    network->close();
-    network->deleteLater();
+    if(network->isOpen())
+    {
+        network->flush();
+        network->close();
+        network->deleteLater();
+    }
 }
 
-void comm::create()
+void ENet::create()
 {
     network=new QTcpSocket(this);
-    QObject::connect(network,&QTcpSocket::connected,[](){qDebug()<<"Connect to PLC successfully!";});
-    QObject::connect(network,&QTcpSocket::disconnected,[](){qDebug()<<"Disconnect from PLC1!";});
-    QObject::connect(network,&QTcpSocket::stateChanged,[](QAbstractSocket::SocketState socketState){qDebug()<<"SocketState changed:"<<socketState;});
-    QObject::connect(network,&QTcpSocket::readyRead,[&](){recv();});
+
+    connect(network,&QTcpSocket::connected,this,&ENet::signalOpen);
+    connect(network,&QTcpSocket::disconnected,this,&ENet::signalClose);
+
+    QObject::connect(network,&QTcpSocket::readyRead,[&](){recv();});//接收函数
     recvSuccess=false;
 }
 
 //以下为连接和断开管理--来自comm
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief comm::open
-/// \param hostName
-/// \param port
-/// \param timeOut
-/// \return
-///
-bool comm::open()
-{
-    if(!netCfg.hostName.isEmpty()) return open(netCfg.hostName,netCfg.port,netCfg.timeOut);
-    return false;
-}
 
-bool comm::open(QString hostName,int port,int timeOut)
+bool ENet::open(QString hostName,int port,int timeOut)
 {
-    netCfg.hostName=hostName;
-    netCfg.port=port;
-    netCfg.timeOut=timeOut;
     if(network && !network->isOpen())
     {
        stopFlag=false;
        network->connectToHost(hostName,port);
        network->waitForConnected(timeOut);
-       qDebug()<<"open connect success.";
+       qDebug()<<"Open:operation success.";
        return true;
+    }else if(!network)
+    {
+        qDebug()<<"Open:network is not exist.";
+        return false;
     }else
     {
-        qDebug()<<"cannot open connect.";
+        qDebug()<<"Open:network is already open.";
         return false;
     }
 }
 
-bool comm::close()
+bool ENet::close()
 {
     if(network && network->isOpen())
     {   stopFlag=true;
         QThread::msleep(100);
         network->flush();
         network->close();
-        qDebug()<<"close success.";
+        qDebug()<<"Close:operation success.";
         return true;
+    }else if(!network)
+    {
+        qDebug()<<"Close:network is not exist.";
+        return false;
     }else
     {
-        qDebug()<<"cannot close connect.";
+        qDebug()<<"Open:network is already close.";
         return false;
     }
 }
 
-void comm::openSlot(QString hostName,int port,int timeOut)
+void ENet::openSlot(QString hostName,int port,int timeOut)
 {
     qDebug()<<QDateTime::currentDateTime().toString()<<":comm通信openSlot实例线程ID:"<<QThread::currentThreadId();
     qDebug()<<"in open slot.";
     open(hostName,port,timeOut);
 }
-void comm::closeSlot()
+
+void ENet::closeSlot()
 {
     qDebug()<<QDateTime::currentDateTime().toString()<<":comm通信closeSlot实例线程ID:"<<QThread::currentThreadId();
     qDebug()<<"in close slot.";
@@ -99,9 +98,8 @@ void comm::closeSlot()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 //发送
-bool comm::send(QString str)
+bool ENet::send(QString str)
 {
     if(network && network->isOpen() && !stopFlag)//当停止标志置ON时，不进行发送操作
     {
@@ -122,7 +120,7 @@ bool comm::send(QString str)
 }
 
 //接收
-void comm::recv()
+void ENet::recv()
 {
     QByteArray array;
     array =network->readAll();
@@ -131,7 +129,7 @@ void comm::recv()
     recvSuccess=true;
 }
 
-QString comm::readRecvBufferString()
+QString ENet::readRecvBufferString()
 {
     QString ret=recvBufferString;
     recvBufferString.clear();
@@ -139,18 +137,18 @@ QString comm::readRecvBufferString()
     return ret;
 }
 
-bool comm::recvFinished()
+bool ENet::recvFinished()
 {
     return recvSuccess;
 }
 
 
-void comm::start()
+void ENet::start()
 {
     stopFlag=false;
 }
 
-void comm::stop()
+void ENet::stop()
 {
     stopFlag=true;
 }

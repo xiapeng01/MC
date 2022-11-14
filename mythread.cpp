@@ -4,15 +4,23 @@
 
 MyThread::MyThread(QObject *parent)
     : QThread{parent}
-{    
+{
     stopped=false;
+    MC_3E=new Mitsubishi_MC_3E_bin();
+}
+
+MyThread::~MyThread()
+{
+    stopped=true;
+    this->msleep(100);
+    MC_3E->close();
+    delete MC_3E;
+    MC_3E=0;
 }
 
 void MyThread::run()
 {
-    MC_3E=new Mitsubishi_MC_3E_bin(this);
     MC_3E->open("127.0.0.1",6000,1000);
-
     address="D100";
     regType="int";
     count=1;
@@ -21,11 +29,9 @@ void MyThread::run()
 
     qDebug()<<"MyThread通信实例线程ID:"<<QThread::currentThreadId();
     this->msleep(1000);
-
     while(!stopped)
     {
         this->msleep(3);
-        //MC_3E->writeInt(adr2,2);
         value=MC_3E->readUShort(address).content;
         if(value==1)
             MC_3E->writeUShort(adr2,2);
@@ -33,6 +39,8 @@ void MyThread::run()
             MC_3E->writeUShort(adr2,3);
         if(value==0 && MC_3E->readUShort("D102").content==1) MC_3E->writeShort("D103",56);
     }
+    this->msleep(100);
+    MC_3E->close();
     stopped=false;
 }
 
@@ -41,6 +49,8 @@ void MyThread::stop()
     stopped=true;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 comThread::comThread(QObject *parent)
     : QThread{parent}
 {

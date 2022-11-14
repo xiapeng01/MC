@@ -22,48 +22,65 @@ MainWindow::MainWindow(QWidget *parent)
     ui->readBtn->setEnabled(false);
     ui->writeBtn->setEnabled(false);
 
-    //初始化新的线程
+    //初始化新的线程--未重写run
     t1=new QThread();
-    t2=new QThread();
 
+    //通讯实现
     MC_3Einstance=new Mitsubishi_MC_3E_bin();
     //MC_3Einstance->moveToThread(t1);
 
-    myT1=new MyThread();
-    myT2=new MyThread();
+    myT1=new MyThread();//重写run
 
-    for(unsigned int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
-
+    //50个线程压力测试
+    //for(unsigned int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
 
     connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
 
-    connect(MC_3Einstance,SIGNAL(networkChangedSignal(QAbstractSocket::SocketState)),this,SLOT(networkChengedSlot(QAbstractSocket::SocketState)));
-    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::networkOpen,this,&MainWindow::networkOpen);
-    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::networkClose,this,&MainWindow::networkClose);
+    //状态栏的状态显示
+    //connect(MC_3Einstance,SIGNAL(networkChangedSignal(QAbstractSocket::SocketState)),this,SLOT(networkChengedSlot(QAbstractSocket::SocketState)));//变更状态栏显示状态
+    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalOpen,this,&MainWindow::networkOpen);//打开网络信号
+    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalClose,this,&MainWindow::networkClose);//关闭网络信号
 
 
-    connect(this,SIGNAL(openNetwork(QString,int,int)),MC_3Einstance,SLOT(openSlot(QString,int,int)));//打开网络
-    connect(this,SIGNAL(closeNetwork()),MC_3Einstance,SLOT(closeSlot()));//关闭网络
 
+    //主线程的实例连接
     MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 
+    //槽读取和写入
     connect(this,SIGNAL(readSignal(QString,unsigned int,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
     connect(this,SIGNAL(writeSignal(QString,unsigned int,bool,QString)),MC_3Einstance,SLOT(writeSlot(QString,unsigned int,bool,QString)));
 
-    //myT1->start();
-
-    if(!t1->isRunning()) t1->start();
-    //if(!t2->isRunning()) t2->start();
     emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
-
 }
 
 MainWindow::~MainWindow()
 {
+
     t1->quit();
-    QThread::msleep(1000);
+    t2->quit();
+    myT1->quit();
+    myT2->quit();
     t1->deleteLater();
+    t2->deleteLater();
+    myT1->deleteLater();
+    myT2->deleteLater();
+
+    MC_3Einstance->close();
+    delete MC_3Einstance;
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+
+    myT1->stop();
+    myT1->quit();
+    myT1->deleteLater();
+
+    MC_3Einstance->close();
+    delete MC_3Einstance;
+
+    event->accept();
 }
 
 void MainWindow::on_readBtn_clicked()
@@ -142,6 +159,7 @@ void MainWindow::on_actionStop_triggered()
 {
     //t2->quit();
     myT1->stop();
+    myT1->quit();
     //myT2->stop();
     //for(int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]->stop();
 }
@@ -189,7 +207,7 @@ void MainWindow::on_readUShort_triggered()
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
-void MainWindow::on_intRead_triggered()
+void MainWindow::on_readInt_triggered()
 {
     int ret;
     QString address=ui->addressLineEdit->text();
@@ -197,7 +215,7 @@ void MainWindow::on_intRead_triggered()
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
-void MainWindow::on_uintRead_triggered()
+void MainWindow::on_readUInt_triggered()
 {
     unsigned int ret;
     QString address=ui->addressLineEdit->text();
@@ -222,6 +240,21 @@ void MainWindow::on_readULong_triggered()
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
+void MainWindow::on_readLongLong_triggered()
+{
+    long long ret;
+    QString address=ui->addressLineEdit->text();
+    ret=MC_3Einstance->readLongLongInt(address).content;
+    ui->valueLineEdit->setText(QString::number(ret));
+}
+
+void MainWindow::on_readULongLong_triggered()
+{
+    unsigned long long ret;
+    QString address=ui->addressLineEdit->text();
+    ret=MC_3Einstance->readULongLongInt(address).content;
+    ui->valueLineEdit->setText(QString::number(ret));
+}
 
 void MainWindow::on_readFloat_triggered()
 {
@@ -230,7 +263,6 @@ void MainWindow::on_readFloat_triggered()
     ret=MC_3Einstance->readFloat(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
-
 
 void MainWindow::on_readDouble_triggered()
 {
@@ -270,21 +302,21 @@ void MainWindow::on_writeShort_triggered()
     MC_3Einstance->writeShort(address,value);
 }
 
-void MainWindow::on_ushortWrite_triggered()
+void MainWindow::on_writeUShort_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned short value=(unsigned short) ui->valueLineEdit->text().replace(expDec,"").toUpper().toUInt();//写之前过滤无用内容
     MC_3Einstance->writeUShort(address,value);
 }
 
-void MainWindow::on_intWrite_triggered()
+void MainWindow::on_writeInt_triggered()
 {
     QString address=ui->addressLineEdit->text();
     int value=(int) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toInt();//写之前过滤无用内容
     MC_3Einstance->writeInt(address,value);
 }
 
-void MainWindow::on_uintWrite_triggered()
+void MainWindow::on_writeUInt_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned int value=(unsigned int) ui->valueLineEdit->text().replace(expDec,"").toUpper().toUInt();//写之前过滤无用内容
@@ -303,6 +335,20 @@ void MainWindow::on_writeULong_triggered()
     QString address=ui->addressLineEdit->text();
     unsigned long value=(unsigned long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULong();//写之前过滤无用内容
     MC_3Einstance->writeULongInt(address,value);
+}
+
+void MainWindow::on_writeLongLong_triggered()
+{
+    QString address=ui->addressLineEdit->text();
+    long long value=(long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULongLong();//写之前过滤无用内容
+    MC_3Einstance->writeLongLongInt(address,value);
+}
+
+void MainWindow::on_writeULongLong_triggered()
+{
+    QString address=ui->addressLineEdit->text();
+    unsigned long long value=(unsigned long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULongLong();//写之前过滤无用内容
+    MC_3Einstance->writeULongLongInt(address,value);
 }
 
 void MainWindow::on_writeFloat_triggered()
@@ -325,4 +371,3 @@ void MainWindow::on_writeString_triggered()
     QString value=ui->valueLineEdit->text();
     MC_3Einstance->writeString(address,value);
 }
-

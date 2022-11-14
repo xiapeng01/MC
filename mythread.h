@@ -16,7 +16,7 @@ signals:
 
 public:
     explicit MyThread(QObject *parent = nullptr);
-
+    ~MyThread();
     void stop();
 
 protected:

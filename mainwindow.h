@@ -15,6 +15,8 @@
 #include <QFuture>
 #include <QMutex>
 #include <mythread.h>
+#include <QEvent>
+#include <QCloseEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,6 +37,8 @@ signals:
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    void closeEvent(QCloseEvent *);
 
     QString format(QString str);
 private:
@@ -77,11 +81,11 @@ private slots:
     void on_readShort_triggered();
     void on_writeShort_triggered();
     void on_readUShort_triggered();
-    void on_intRead_triggered();
-    void on_uintRead_triggered();
-    void on_ushortWrite_triggered();
-    void on_intWrite_triggered();
-    void on_uintWrite_triggered();
+    void on_readInt_triggered();
+    void on_readUInt_triggered();
+    void on_writeUShort_triggered();
+    void on_writeInt_triggered();
+    void on_writeUInt_triggered();
     void on_readLong_triggered();
     void on_readULong_triggered();
     void on_readFloat_triggered();
@@ -92,5 +96,9 @@ private slots:
     void on_writeFloat_triggered();
     void on_writeDouble_triggered();
     void on_writeString_triggered();
+    void on_readLongLong_triggered();
+    void on_readULongLong_triggered();
+    void on_writeLongLong_triggered();
+    void on_writeULongLong_triggered();
 };
 #endif // MAINWINDOW_H
