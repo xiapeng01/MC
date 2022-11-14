@@ -326,7 +326,7 @@ void MainWindow::on_writeUInt_triggered()
 void MainWindow::on_writeLong_triggered()
 {
     QString address=ui->addressLineEdit->text();
-    long value=(long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULong();//写之前过滤无用内容
+    long value=(long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toLong();//写之前过滤无用内容
     MC_3Einstance->writeLongInt(address,value);
 }
 
@@ -340,7 +340,7 @@ void MainWindow::on_writeULong_triggered()
 void MainWindow::on_writeLongLong_triggered()
 {
     QString address=ui->addressLineEdit->text();
-    long long value=(long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULongLong();//写之前过滤无用内容
+    long long value=(long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toLongLong();//写之前过滤无用内容
     MC_3Einstance->writeLongLongInt(address,value);
 }
 
