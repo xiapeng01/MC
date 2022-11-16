@@ -14,14 +14,17 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mythread.cpp \
-    opmethod.cpp
+    opmethod.cpp \
+    workclass.cpp
 
 HEADERS += \
     ENet.h \
     Mitsubishi_MC_3E.h \
+    connectDB.h \
     mainwindow.h \
     mythread.h \
-    opmethod.h
+    opmethod.h \
+    workclass.h
 
 FORMS += \
     mainwindow.ui
@@ -31,6 +34,10 @@ QT += network
 QT += concurrent
 
 QT += serialport
+
+QT += sql
+
+QT += core5compat #解决中文乱码
 
 #QT += concurrent testlib
 

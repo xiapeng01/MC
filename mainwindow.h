@@ -17,6 +17,8 @@
 #include <mythread.h>
 #include <QEvent>
 #include <QCloseEvent>
+#include "workclass.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,6 +35,10 @@ signals:
     void openNetwork(QString,int,int);
     void closeNetwork();
 
+    void rPlc();//操作寄存器
+    void rDb();//只是定时触发
+    void wDb();//定时触发
+
 //方法
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -41,6 +47,11 @@ public:
     void closeEvent(QCloseEvent *);
 
     QString format(QString str);
+
+    ReadPlc *readPlc;
+    ReadDatabase *readDb;
+    writeDatabase *writeDb;
+
 private:
     //QString read(QString,int,bool);
     void write(QString,int,bool,QString);
@@ -49,13 +60,20 @@ private:
 private:
     Ui::MainWindow *ui;
     Mitsubishi_MC_3E_bin *MC_3Einstance;
-    QThread *t1,*t2;
+    QThread *t1,*t2,*t3;
     //QMutex mut;
     bool status;
     MyThread *myT1,*myT2,*myTrd[50];
 
+    QStringList writeDBbuf;
+
 //槽
 private slots:
+
+    void upDateSlot();
+    void querySlot(QString s);
+    void writeDbSlot();
+
     void on_readBtn_clicked();
     void on_writeBtn_clicked();
     void on_btnConnect_clicked();

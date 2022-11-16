@@ -11,7 +11,6 @@
 class ENet:public QObject
 {
     Q_OBJECT
-
 signals:
     void signalOpen();
     void signalClose();
@@ -33,6 +32,9 @@ public:
     bool recvFinished();
     void start();
     void stop();
+
+    QTcpSocket::SocketState state();
+
     QString readRecvBufferString();//读取结果数据
 
 protected:

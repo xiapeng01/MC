@@ -44,40 +44,31 @@ void ENet::create()
 
 bool ENet::open(QString hostName,int port,int timeOut)
 {
-    if(network && !network->isOpen())
+    if(network && network->state()!=QTcpSocket::ConnectedState)
     {
+       if(network->isOpen()) network->close();
        stopFlag=false;
        network->connectToHost(hostName,port);
        network->waitForConnected(timeOut);
        qDebug()<<"Open:operation success.";
        return true;
-    }else if(!network)
+    }else
     {
         qDebug()<<"Open:network is not exist.";
         return false;
-    }else
-    {
-        qDebug()<<"Open:network is already open.";
-        return false;
     }
 }
-
 bool ENet::close()
 {
     if(network && network->isOpen())
     {   stopFlag=true;
-        QThread::msleep(100);
         network->flush();
         network->close();
         qDebug()<<"Close:operation success.";
         return true;
-    }else if(!network)
-    {
-        qDebug()<<"Close:network is not exist.";
-        return false;
     }else
     {
-        qDebug()<<"Open:network is already close.";
+        qDebug()<<"Close:network is not exist.";
         return false;
     }
 }
@@ -101,7 +92,7 @@ void ENet::closeSlot()
 //发送
 bool ENet::send(QString str)
 {
-    if(network && network->isOpen() && !stopFlag)//当停止标志置ON时，不进行发送操作
+    if(network && network->isOpen() && !stopFlag &&network->state()==QTcpSocket::ConnectedState)//当停止标志置ON时，不进行发送操作
     {
         comMut.lock();
         recvSuccess=false;
@@ -114,7 +105,7 @@ bool ENet::send(QString str)
     }else
     {
         qDebug()<<"Network is close!";
-        throw("Network is close!");
+        //throw("Network is close!");
     }
     return false;
 }
@@ -151,6 +142,11 @@ void ENet::start()
 void ENet::stop()
 {
     stopFlag=true;
+}
+
+QTcpSocket::SocketState ENet::state()
+{
+    return network->state();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

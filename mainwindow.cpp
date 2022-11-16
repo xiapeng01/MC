@@ -1,4 +1,7 @@
 #include "mainwindow.h"
+#include <QTextCodec>
+
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -6,6 +9,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     this->setWindowTitle("QT三菱MC-3E帧读写寄存器");
+
+    //QTextCodec::setCodecForLocale(QTextCodec::codecForName("UNICODE"));
+            //setCodecForCStrings(QTextCodec::codecForName("GB2312"));
 
     //打印当前线程ID
     qDebug()<<"主线程ID:"<<QThread::currentThreadId();
@@ -22,44 +28,70 @@ MainWindow::MainWindow(QWidget *parent)
     ui->readBtn->setEnabled(false);
     ui->writeBtn->setEnabled(false);
 
-    //初始化新的线程--未重写run
+    //初始化新的线程
+    myT1=new MyThread();
     t1=new QThread();
+    t2=new QThread();
+    t3=new QThread();
+
+    readPlc=new ReadPlc;
+    readDb = new ReadDatabase;
+    writeDb = new writeDatabase;
+
+    readPlc->moveToThread(t1);
+    readDb->moveToThread(t2);
+    writeDb->moveToThread(t3);
 
     //通讯实现
     MC_3Einstance=new Mitsubishi_MC_3E_bin();
-    //MC_3Einstance->moveToThread(t1);
 
-    myT1=new MyThread();//重写run
+    connect(readPlc,SIGNAL(update(QString)),this,SLOT(querySlot(QString)));//
+    connect(readDb,SIGNAL(update()),this,SLOT(upDateSlot()));//更新主画面的表格
+    connect(writeDb,SIGNAL(update()),this,SLOT(writeDbSlot()));//写数据库
+
+    connect(this,SIGNAL(rPlc()),readPlc,SLOT(doWork()));
+    connect(this,SIGNAL(rDb()),readDb,SLOT(doWork()));
+    connect(this,SIGNAL(wDb()),writeDb,SLOT(doWork()));
+
+    t1->start();//启动管理线程
+    t2->start();//启动管理线程
+    t3->start();//启动管理线程
+
+    emit rPlc();//发信号启动槽函数
+    emit rDb();//发信号启动槽函数
+    emit wDb();//触发写数据库
 
     //50个线程压力测试
     //for(unsigned int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
 
-    connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
+    //connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
 
     //状态栏的状态显示
     //connect(MC_3Einstance,SIGNAL(networkChangedSignal(QAbstractSocket::SocketState)),this,SLOT(networkChengedSlot(QAbstractSocket::SocketState)));//变更状态栏显示状态
     connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalOpen,this,&MainWindow::networkOpen);//打开网络信号
     connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalClose,this,&MainWindow::networkClose);//关闭网络信号
 
-
-
     //主线程的实例连接
-    MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    //MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 
     //槽读取和写入
     connect(this,SIGNAL(readSignal(QString,unsigned int,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
     connect(this,SIGNAL(writeSignal(QString,unsigned int,bool,QString)),MC_3Einstance,SLOT(writeSlot(QString,unsigned int,bool,QString)));
 
-    emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    //emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 }
 
 MainWindow::~MainWindow()
 {
+    readPlc->stop();
+    readDb->stop();
 
     t1->quit();
     t2->quit();
     myT1->quit();
     myT2->quit();
+    delete t1;
+    delete t2;
     t1->deleteLater();
     t2->deleteLater();
     myT1->deleteLater();
@@ -114,14 +146,14 @@ QString MainWindow::format(QString str)
 
 void MainWindow::on_btnConnect_clicked()
 {
-    //MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
-    emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    //emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 }
 
 void MainWindow::on_btnClose_clicked()
 {
-    //MC_3Einstance->close();
-    emit closeNetwork();
+    MC_3Einstance->close();
+    //emit closeNetwork();
 }
 
 void MainWindow::networkChengedSlot(QAbstractSocket::SocketState state)
@@ -148,7 +180,11 @@ void MainWindow::networkClose()
 
 void MainWindow::on_actionStart_triggered()
 {
-    myT1->start();
+    qDebug()<<"start slot.";
+    t1->start();
+    t2->start();
+
+    //myT1->start();
     //myT2->start();
     //t1->start();
     //for(int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]->start();
@@ -157,9 +193,12 @@ void MainWindow::on_actionStart_triggered()
 
 void MainWindow::on_actionStop_triggered()
 {
+    qDebug()<<"stop slot.";
+    readPlc->stop();
+    readDb->stop();
     //t2->quit();
-    myT1->stop();
-    myT1->quit();
+    //myT1->stop();
+    //myT1->quit();
     //myT2->stop();
     //for(int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]->stop();
 }
@@ -172,6 +211,33 @@ void MainWindow::on_actionReadSlot_triggered()
 void MainWindow::on_actionWriteSlot_triggered()
 {
     emit writeSignal(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked(),ui->valueLineEdit->text());
+}
+
+void MainWindow::upDateSlot()//把数据库读出来并显示到UI
+{
+
+    QSqlQueryModel *model=new QSqlQueryModel;
+    model->setQuery("select * from user");
+    ui->tableView->setModel(model);
+}
+
+void MainWindow::querySlot(QString s)//追加数据
+{
+    qDebug()<<"get signal str:"<<s;
+    writeDBbuf.append(s);
+}
+
+void MainWindow::writeDbSlot()//写数据库
+{
+    QStringList list=writeDBbuf;
+    writeDBbuf.clear();
+    foreach(QString s,list)
+    {
+        qDebug()<<"buf str:"<<s;
+        QSqlQuery query;
+        query.exec(s);
+    }
+    list.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////read

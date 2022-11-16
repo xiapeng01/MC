@@ -12,7 +12,6 @@ MyThread::MyThread(QObject *parent)
 MyThread::~MyThread()
 {
     stopped=true;
-    this->msleep(100);
     MC_3E->close();
     delete MC_3E;
     MC_3E=0;

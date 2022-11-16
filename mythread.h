@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QEventLoop>
 #include <Mitsubishi_MC_3E.h>
+#include <QtSql/QSql>
+#include <QtSql/QSqlQueryModel>
 
 class MyThread : public QThread
 {
@@ -28,6 +30,9 @@ private:
     QString address;
     QString regType;
     int count;
+
+    QSqlDatabase *db;
+    QSqlQueryModel *model;
 };
 
 class comThread:public QThread
