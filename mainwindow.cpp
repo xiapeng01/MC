@@ -1,6 +1,4 @@
 #include "mainwindow.h"
-#include <QTextCodec>
-
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -29,21 +27,21 @@ MainWindow::MainWindow(QWidget *parent)
     ui->writeBtn->setEnabled(false);
 
     //初始化新的线程
-    myT1=new MyThread();
-    t1=new QThread();
-    t2=new QThread();
-    t3=new QThread();
+    myT1=new MyThread(this);
+    t1=new QThread(this);
+    t2=new QThread(this);
+    t3=new QThread(this);
 
-    readPlc=new ReadPlc;
-    readDb = new ReadDatabase;
-    writeDb = new writeDatabase;
+    readPlc = new ReadPlc();
+    readDb = new ReadDatabase();
+    writeDb = new writeDatabase();
 
     readPlc->moveToThread(t1);
     readDb->moveToThread(t2);
     writeDb->moveToThread(t3);
 
     //通讯实现
-    MC_3Einstance=new Mitsubishi_MC_3E_bin();
+    MC_3Einstance = new Mitsubishi_MC_3E_bin(this);
 
     connect(readPlc,SIGNAL(update(QString)),this,SLOT(querySlot(QString)));//
     connect(readDb,SIGNAL(update()),this,SLOT(upDateSlot()));//更新主画面的表格
@@ -83,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+
     readPlc->stop();
     readDb->stop();
 
@@ -215,10 +214,15 @@ void MainWindow::on_actionWriteSlot_triggered()
 
 void MainWindow::upDateSlot()//把数据库读出来并显示到UI
 {
-
-    QSqlQueryModel *model=new QSqlQueryModel;
+    model = new QSqlQueryModel;
     model->setQuery("select * from user");
     ui->tableView->setModel(model);
+    mList.append(model);
+    while(mList.size()>=2)
+    {
+        mList.first()->deleteLater();
+        mList.removeFirst();
+    }
 }
 
 void MainWindow::querySlot(QString s)//追加数据

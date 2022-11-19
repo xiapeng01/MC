@@ -30,7 +30,7 @@ ENet::~ENet()
 
 void ENet::create()
 {
-    network=new QTcpSocket(this);
+    network=new QTcpSocket();
 
     connect(network,&QTcpSocket::connected,this,&ENet::signalOpen);
     connect(network,&QTcpSocket::disconnected,this,&ENet::signalClose);

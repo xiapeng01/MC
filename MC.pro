@@ -37,8 +37,6 @@ QT += serialport
 
 QT += sql
 
-QT += core5compat #解决中文乱码
-
 #QT += concurrent testlib
 
 # Default rules for deployment.

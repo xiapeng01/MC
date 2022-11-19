@@ -67,6 +67,9 @@ private:
 
     QStringList writeDBbuf;
 
+    QSqlQueryModel *model,*mTemp;
+    QList<QSqlQueryModel *> mList;
+
 //槽
 private slots:
 
