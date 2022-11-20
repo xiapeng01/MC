@@ -9,14 +9,19 @@
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Mitsubishi_MC_3E_bin:public OPMethod
+/// 三菱协议集合
+///
+namespace  Mit {
+
+//MC协议
+class MC_3E_bin:public OPMethod
 {
     Q_OBJECT
 
 //以下为方法
 public:
-    Mitsubishi_MC_3E_bin(QObject *parent = nullptr);//构造函数
-    ~Mitsubishi_MC_3E_bin();//析构函数
+    MC_3E_bin(QObject *parent = nullptr);//构造函数
+    ~MC_3E_bin();//析构函数
 
 protected:
     //以下为私有工具方法
@@ -32,4 +37,5 @@ private:
     int token,lastToken;
 };
 
+}
 #endif

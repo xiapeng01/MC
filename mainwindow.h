@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtNetwork/QtNetwork>
-#include "Mitsubishi_MC_3E.h"
+#include "protocol.h"
 #include <QMetaObject>
 #include "ui_mainwindow.h"
 #include <QRegularExpression>
@@ -59,7 +59,7 @@ private:
 //属性
 private:
     Ui::MainWindow *ui;
-    Mitsubishi_MC_3E_bin *MC_3Einstance;
+    Mit::MC_3E_bin *MC_3E;
     QThread *t1,*t2,*t3;
     //QMutex mut;
     bool status;

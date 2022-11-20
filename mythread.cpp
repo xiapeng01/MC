@@ -6,7 +6,7 @@ MyThread::MyThread(QObject *parent)
     : QThread{parent}
 {
     stopped=false;
-    MC_3E=new Mitsubishi_MC_3E_bin();
+    MC_3E=new Mit::MC_3E_bin();
 }
 
 MyThread::~MyThread()

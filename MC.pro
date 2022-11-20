@@ -10,20 +10,20 @@ CONFIG += c++17
 
 SOURCES += \
     ENet.cpp \
-    Mitsubishi_MC_3E.cpp \
     main.cpp \
     mainwindow.cpp \
     mythread.cpp \
     opmethod.cpp \
+    protocol.cpp \
     workclass.cpp
 
 HEADERS += \
     ENet.h \
-    Mitsubishi_MC_3E.h \
     connectDB.h \
     mainwindow.h \
     mythread.h \
     opmethod.h \
+    protocol.h \
     workclass.h
 
 FORMS += \

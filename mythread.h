@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QObject>
 #include <QEventLoop>
-#include <Mitsubishi_MC_3E.h>
+#include <protocol.h>
 #include <QtSql/QSql>
 #include <QtSql/QSqlQueryModel>
 
@@ -26,7 +26,7 @@ protected:
 
 private:
     volatile bool stopped;
-    Mitsubishi_MC_3E_bin *MC_3E;
+    Mit::MC_3E_bin *MC_3E;
     QString address;
     QString regType;
     int count;

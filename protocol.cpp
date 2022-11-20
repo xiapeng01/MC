@@ -1,13 +1,14 @@
-#include "./Mitsubishi_MC_3E.h"
+#include "./protocol.h"
 
 
-Mitsubishi_MC_3E_bin::Mitsubishi_MC_3E_bin(QObject *parent)
+
+Mit::MC_3E_bin::MC_3E_bin(QObject *parent)
     :OPMethod{parent}
 {
 
 }
 
-Mitsubishi_MC_3E_bin::~Mitsubishi_MC_3E_bin()
+Mit::MC_3E_bin::~MC_3E_bin()
 {
     ;
 }
@@ -15,7 +16,7 @@ Mitsubishi_MC_3E_bin::~Mitsubishi_MC_3E_bin()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //构造MC-3E帧
-QString Mitsubishi_MC_3E_bin::enCode(int method,QString address,unsigned int length,bool wordMode,QString value)
+QString Mit::MC_3E_bin::enCode(int method,QString address,unsigned int length,bool wordMode,QString value)
 {
     //method=0 读
     //method=1 写
@@ -142,7 +143,7 @@ QString Mitsubishi_MC_3E_bin::enCode(int method,QString address,unsigned int len
 }
 
 //解析MC-3E帧
-retData Mitsubishi_MC_3E_bin::deCode(QString str)//只负责把返回帧的有效值分解出来
+retData Mit::MC_3E_bin::deCode(QString str)//只负责把返回帧的有效值分解出来
 {
     retData ret;
     recvErrorCode.clear();
@@ -168,7 +169,7 @@ retData Mitsubishi_MC_3E_bin::deCode(QString str)//只负责把返回帧的有�
     }
 }
 
-regType Mitsubishi_MC_3E_bin::registerMode(QString address,bool mode)
+regType Mit::MC_3E_bin::registerMode(QString address,bool mode)
 {
     ;
     QString regName=address.toUpper().replace(expChar,"");

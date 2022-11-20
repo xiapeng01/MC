@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     writeDb->moveToThread(t3);
 
     //通讯实现
-    MC_3Einstance = new Mitsubishi_MC_3E_bin(this);
+    MC_3E = new Mit::MC_3E_bin(this);
 
     connect(readPlc,SIGNAL(update(QString)),this,SLOT(querySlot(QString)));//
     connect(readDb,SIGNAL(update()),this,SLOT(upDateSlot()));//更新主画面的表格
@@ -62,19 +62,19 @@ MainWindow::MainWindow(QWidget *parent)
     //50个线程压力测试
     //for(unsigned int i=0;i<sizeof(myTrd)/sizeof(myTrd[0]);i++)myTrd[i]=new MyThread();
 
-    //connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
+    //connect(myT1,SIGNAL(upDate(QString,uint,bool)),MC_3E,SLOT(readSlot(QString,unsigned int,bool)));
 
     //状态栏的状态显示
-    //connect(MC_3Einstance,SIGNAL(networkChangedSignal(QAbstractSocket::SocketState)),this,SLOT(networkChengedSlot(QAbstractSocket::SocketState)));//变更状态栏显示状态
-    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalOpen,this,&MainWindow::networkOpen);//打开网络信号
-    connect(MC_3Einstance,&Mitsubishi_MC_3E_bin::signalClose,this,&MainWindow::networkClose);//关闭网络信号
+    //connect(MC_3E,SIGNAL(networkChangedSignal(QAbstractSocket::SocketState)),this,SLOT(networkChengedSlot(QAbstractSocket::SocketState)));//变更状态栏显示状态
+    connect(MC_3E,&Mit::MC_3E_bin::signalOpen,this,&MainWindow::networkOpen);//打开网络信号
+    connect(MC_3E,&Mit::MC_3E_bin::signalClose,this,&MainWindow::networkClose);//关闭网络信号
 
     //主线程的实例连接
-    //MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    //MC_3E->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 
     //槽读取和写入
-    connect(this,SIGNAL(readSignal(QString,unsigned int,bool)),MC_3Einstance,SLOT(readSlot(QString,unsigned int,bool)));
-    connect(this,SIGNAL(writeSignal(QString,unsigned int,bool,QString)),MC_3Einstance,SLOT(writeSlot(QString,unsigned int,bool,QString)));
+    connect(this,SIGNAL(readSignal(QString,unsigned int,bool)),MC_3E,SLOT(readSlot(QString,unsigned int,bool)));
+    connect(this,SIGNAL(writeSignal(QString,unsigned int,bool,QString)),MC_3E,SLOT(writeSlot(QString,unsigned int,bool,QString)));
 
     //emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 }
@@ -96,8 +96,8 @@ MainWindow::~MainWindow()
     myT1->deleteLater();
     myT2->deleteLater();
 
-    MC_3Einstance->close();
-    delete MC_3Einstance;
+    MC_3E->close();
+    delete MC_3E;
     delete ui;
 }
 
@@ -108,27 +108,27 @@ void MainWindow::closeEvent(QCloseEvent *event)
     myT1->quit();
     myT1->deleteLater();
 
-    MC_3Einstance->close();
-    delete MC_3Einstance;
+    MC_3E->close();
+    delete MC_3E;
 
     event->accept();
 }
 
 void MainWindow::on_readBtn_clicked()
 {
-    QString ret=MC_3Einstance->read(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked()).value;
-    ui->sendLineEdit->setText(format(MC_3Einstance->readSendString()));
-    ui->recvLineEdit->setText(format(MC_3Einstance->readRecvString()));
-    ui->resultLineEdit->setText(MC_3Einstance->readErrorCode());
+    QString ret=MC_3E->read(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked()).value;
+    ui->sendLineEdit->setText(format(MC_3E->readSendString()));
+    ui->recvLineEdit->setText(format(MC_3E->readRecvString()));
+    ui->resultLineEdit->setText(MC_3E->readErrorCode());
     ui->valueLineEdit->setText(ret);
 }
 
 void MainWindow::on_writeBtn_clicked()
 {
-    MC_3Einstance->write(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked(),ui->valueLineEdit->text());
-    ui->sendLineEdit->setText(format(MC_3Einstance->readSendString()));
-    ui->recvLineEdit->setText(format(MC_3Einstance->readRecvString()));
-    ui->resultLineEdit->setText(MC_3Einstance->readErrorCode());
+    MC_3E->write(ui->addressLineEdit->text(),ui->countLineEdit->text().toInt(),ui->wordModeCheckBox->isChecked(),ui->valueLineEdit->text());
+    ui->sendLineEdit->setText(format(MC_3E->readSendString()));
+    ui->recvLineEdit->setText(format(MC_3E->readRecvString()));
+    ui->resultLineEdit->setText(MC_3E->readErrorCode());
 }
 
 QString MainWindow::format(QString str)
@@ -145,13 +145,13 @@ QString MainWindow::format(QString str)
 
 void MainWindow::on_btnConnect_clicked()
 {
-    MC_3Einstance->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
+    MC_3E->open(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
     //emit openNetwork(ui->IPLineEdit->text(),ui->portLineEdit->text().toInt(),1000);
 }
 
 void MainWindow::on_btnClose_clicked()
 {
-    MC_3Einstance->close();
+    MC_3E->close();
     //emit closeNetwork();
 }
 
@@ -249,7 +249,7 @@ void MainWindow::on_readBool_triggered()
 {
     bool ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readBool(address).content;
+    ret=MC_3E->readBool(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -257,7 +257,7 @@ void MainWindow::on_readByte_triggered()
 {
     unsigned char ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readByte(address).content;
+    ret=MC_3E->readByte(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -265,7 +265,7 @@ void MainWindow::on_readShort_triggered()
 {
     short ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readShort(address).content;
+    ret=MC_3E->readShort(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -273,7 +273,7 @@ void MainWindow::on_readUShort_triggered()
 {
     unsigned short ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readUShort(address).content;
+    ret=MC_3E->readUShort(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -281,7 +281,7 @@ void MainWindow::on_readInt_triggered()
 {
     int ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readInt(address).content;
+    ret=MC_3E->readInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -289,7 +289,7 @@ void MainWindow::on_readUInt_triggered()
 {
     unsigned int ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readUInt(address).content;
+    ret=MC_3E->readUInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -297,7 +297,7 @@ void MainWindow::on_readLong_triggered()
 {
     long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readLongInt(address).content;
+    ret=MC_3E->readLongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -306,7 +306,7 @@ void MainWindow::on_readULong_triggered()
 {
     unsigned long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readULongInt(address).content;
+    ret=MC_3E->readULongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -314,7 +314,7 @@ void MainWindow::on_readLongLong_triggered()
 {
     long long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readLongLongInt(address).content;
+    ret=MC_3E->readLongLongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -322,7 +322,7 @@ void MainWindow::on_readULongLong_triggered()
 {
     unsigned long long ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readULongLongInt(address).content;
+    ret=MC_3E->readULongLongInt(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -330,7 +330,7 @@ void MainWindow::on_readFloat_triggered()
 {
     float ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readFloat(address).content;
+    ret=MC_3E->readFloat(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -338,7 +338,7 @@ void MainWindow::on_readDouble_triggered()
 {
     double ret;
     QString address=ui->addressLineEdit->text();
-    ret=MC_3Einstance->readDouble(address).content;
+    ret=MC_3E->readDouble(address).content;
     ui->valueLineEdit->setText(QString::number(ret));
 }
 
@@ -347,7 +347,7 @@ void MainWindow::on_readString_triggered()
     QString ret;
     QString address=ui->addressLineEdit->text();
     int count=ui->countLineEdit->text().toUInt();
-    ret=MC_3Einstance->readString(address,count).content;
+    ret=MC_3E->readString(address,count).content;
     ui->valueLineEdit->setText(ret);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////write
@@ -355,89 +355,89 @@ void MainWindow::on_writeBool_triggered()
 {
     QString address=ui->addressLineEdit->text();
     bool value=ui->valueLineEdit->text().replace(expBin,"").toUpper().left(1)=="1"?1:0;//写之前过滤无用内容
-    MC_3Einstance->writeBool(address,value);
+    MC_3E->writeBool(address,value);
 }
 
 void MainWindow::on_writeByte_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned char value=(unsigned char) ui->valueLineEdit->text().replace(expDec,"").toUpper().toUInt();//写之前过滤无用内容
-    MC_3Einstance->writeByte(address,value);
+    MC_3E->writeByte(address,value);
 }
 
 void MainWindow::on_writeShort_triggered()
 {
     QString address=ui->addressLineEdit->text();
     short value=(short) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toInt();//写之前过滤无用内容
-    MC_3Einstance->writeShort(address,value);
+    MC_3E->writeShort(address,value);
 }
 
 void MainWindow::on_writeUShort_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned short value=(unsigned short) ui->valueLineEdit->text().replace(expDec,"").toUpper().toUInt();//写之前过滤无用内容
-    MC_3Einstance->writeUShort(address,value);
+    MC_3E->writeUShort(address,value);
 }
 
 void MainWindow::on_writeInt_triggered()
 {
     QString address=ui->addressLineEdit->text();
     int value=(int) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toInt();//写之前过滤无用内容
-    MC_3Einstance->writeInt(address,value);
+    MC_3E->writeInt(address,value);
 }
 
 void MainWindow::on_writeUInt_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned int value=(unsigned int) ui->valueLineEdit->text().replace(expDec,"").toUpper().toUInt();//写之前过滤无用内容
-    MC_3Einstance->writeUInt(address,value);
+    MC_3E->writeUInt(address,value);
 }
 
 void MainWindow::on_writeLong_triggered()
 {
     QString address=ui->addressLineEdit->text();
     long value=(long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toLong();//写之前过滤无用内容
-    MC_3Einstance->writeLongInt(address,value);
+    MC_3E->writeLongInt(address,value);
 }
 
 void MainWindow::on_writeULong_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned long value=(unsigned long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULong();//写之前过滤无用内容
-    MC_3Einstance->writeULongInt(address,value);
+    MC_3E->writeULongInt(address,value);
 }
 
 void MainWindow::on_writeLongLong_triggered()
 {
     QString address=ui->addressLineEdit->text();
     long long value=(long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toLongLong();//写之前过滤无用内容
-    MC_3Einstance->writeLongLongInt(address,value);
+    MC_3E->writeLongLongInt(address,value);
 }
 
 void MainWindow::on_writeULongLong_triggered()
 {
     QString address=ui->addressLineEdit->text();
     unsigned long long value=(unsigned long long) ui->valueLineEdit->text().replace(expSDec,"").toUpper().toULongLong();//写之前过滤无用内容
-    MC_3Einstance->writeULongLongInt(address,value);
+    MC_3E->writeULongLongInt(address,value);
 }
 
 void MainWindow::on_writeFloat_triggered()
 {
     QString address=ui->addressLineEdit->text();
     float value=ui->valueLineEdit->text().replace(expFDec,"").toUpper().toFloat();//写之前过滤无用内容
-    MC_3Einstance->writeFloat(address,value);
+    MC_3E->writeFloat(address,value);
 }
 
 void MainWindow::on_writeDouble_triggered()
 {
     QString address=ui->addressLineEdit->text();
     double value=ui->valueLineEdit->text().replace(expFDec,"").toUpper().toDouble();//写之前过滤无用内容
-    MC_3Einstance->writeDouble(address,value);
+    MC_3E->writeDouble(address,value);
 }
 
 void MainWindow::on_writeString_triggered()
 {
     QString address=ui->addressLineEdit->text();
     QString value=ui->valueLineEdit->text();
-    MC_3Einstance->writeString(address,value);
+    MC_3E->writeString(address,value);
 }
